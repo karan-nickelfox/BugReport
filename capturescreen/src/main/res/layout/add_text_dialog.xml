@@ -4,22 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#B3000000"
+    android:background="#6A000000"
     android:orientation="vertical">
-
-    <TextView
-        android:id="@+id/add_text_done_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_margin="20dp"
-        android:padding="10dp"
-        android:text="@string/done"
-        android:textAllCaps="false"
-        android:textColor="@color/white"
-        android:textSize="17sp" />
 
     <EditText
         android:id="@+id/add_text_edit_text"
@@ -29,9 +15,25 @@
         android:layout_above="@+id/add_text_color_picker_relative_layout"
         android:layout_below="@+id/add_text_done_tv"
         android:background="@null"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:gravity="center"
         android:inputType="textMultiLine"
         android:textSize="40sp" />
+
+    <TextView
+        android:id="@+id/add_text_done_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="8dp"
+        android:padding="8dp"
+        android:text="@string/done"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="17sp" />
 
     <RelativeLayout
         android:id="@+id/add_text_color_picker_relative_layout"

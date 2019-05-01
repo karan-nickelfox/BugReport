@@ -178,13 +178,15 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        editView.viewTreeObserver.addOnGlobalLayoutListener {
-            val maxHeight = editView.height.toDouble()
-            val resizeRatio = maxHeight / bitmap.height
-            editView.layoutParams.width = (bitmap.width * resizeRatio).toInt()
-            editView.layoutParams.height = maxHeight.toInt()
-            editView.source.setImageBitmap(bitmap)
-        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        val maxHeight = editView.height.toDouble()
+        val resizeRatio = maxHeight / bitmap.height
+        editView.layoutParams.width = (bitmap.width * resizeRatio).toInt()
+        editView.layoutParams.height = maxHeight.toInt()
+        editView.source.setImageBitmap(bitmap)
     }
 
     override fun onEditTextChangeListener(rootView: View?, text: String?, colorCode: Int) {
