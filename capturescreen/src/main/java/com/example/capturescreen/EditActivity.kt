@@ -77,9 +77,9 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
 
                 override fun onBitmapReady(bitmap: Bitmap?) {
                     val fileName = this@EditActivity.saveImage(bitmap!!)
-                    val emailIntent = Intent(Intent.ACTION_SENDTO)
+                    val emailIntent = Intent(Intent.ACTION_SEND)
                     emailIntent.data = Uri.parse("mailto:")
-
+                    emailIntent.type = "image/*"
                     val screenshotUri = this@EditActivity.getFileStreamPath(fileName!!).run {
                         FileProvider.getUriForFile(this@EditActivity, applicationContext.packageName, this)
 
