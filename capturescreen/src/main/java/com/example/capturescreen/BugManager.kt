@@ -9,6 +9,7 @@ import android.content.Intent
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import com.example.capturescreen.utils.Constants.Companion.SCREENSHOT_FILE_NAME
 import com.example.capturescreen.utils.saveImage
 import com.example.capturescreen.utils.takeScreenShot
@@ -50,6 +51,9 @@ object BugManager : ShakeDetector.Listener, Application.ActivityLifecycleCallbac
 
     override fun hearShake() {
         if (!alertDialog.isShowing) {
+            currentActivity.window.decorView.apply {
+                systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            }
             alertDialog.show()
             Log.e("Shake", "Shake detected !")
         }

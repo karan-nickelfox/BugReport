@@ -6,9 +6,6 @@ import android.graphics.Bitmap
 import android.view.View
 
 fun Activity.takeScreenShot(): Bitmap? {
-    window.decorView.apply {
-        systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-    }
     return takeScreenShotForView(window.decorView.rootView)
 }
 
