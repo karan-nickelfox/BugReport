@@ -1,0 +1,12 @@
+<resources>
+    <string name="shake_dialog_message">Shake detected! Want to report a bug ?</string>
+    <string name="yes">Yes</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+    <string name="brush">Brush</string>
+    <string name="text">Text</string>
+    <string name="close">Close</string>
+    <string name="send">Send</string>
+    <string name="save">Save</string>
+    <string name="done">Done</string>
+</resources>
