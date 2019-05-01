@@ -87,6 +87,9 @@ object BugManager : ShakeDetector.Listener, Application.ActivityLifecycleCallbac
     }
 
     override fun onActivityStopped(activity: Activity?) {
+        if (alertDialog.isShowing) {
+            alertDialog.dismiss()
+        }
         Log.e("Shake", activity!!.localClassName + " stopped !")
         if (isValidActivity(activity)) {
             shakeDetector.stop()

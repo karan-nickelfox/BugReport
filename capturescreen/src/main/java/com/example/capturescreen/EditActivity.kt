@@ -85,6 +85,8 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
                     val screenshotUri = this@EditActivity.getFileStreamPath(fileName!!).run {
                         FileProvider.getUriForFile(this@EditActivity, applicationContext.packageName, this)
                     }
+                    emailIntent.putExtra(Intent.EXTRA_SUBJECT, getString(applicationInfo.labelRes)+ " Android App Bug Report")
+                    emailIntent.putExtra(Intent.EXTRA_TEXT, getSubjectLine())
                     emailIntent.putExtra(Intent.EXTRA_STREAM, screenshotUri)
                     startActivity(emailIntent)
                     editView.source.setImageBitmap(MediaStore.Images.Media.getBitmap(contentResolver, screenshotUri))
@@ -97,6 +99,29 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
                 setOnEditListener(this@EditActivity)
             }
         }
+    }
+
+    private fun getSubjectLine(): String {
+        val appVersion: String
+        packageManager.getPackageInfo(packageName, 0).run {
+            appVersion = "App Version: $versionName ($versionCode)"
+        }
+        val stringBuilder = StringBuilder(appVersion)
+        "Android Version: ${Build.VERSION.SDK_INT}".let {
+            stringBuilder.append("\n").append(it)
+        }
+        "Device Manufacturer: ${Build.MANUFACTURER.toUpperCase()}".let {
+            stringBuilder.append("\n").append(it)
+        }
+        "Device Model: ${Build.MODEL.toUpperCase()}".let {
+            stringBuilder.append("\n").append(it)
+        }
+        resources.displayMetrics.let {
+            stringBuilder.append("\n").append("Device Resolution: ").append(it.heightPixels).append("x").append(it.widthPixels)
+                    .append("\n").append("Device Density: ").append(it.densityDpi).append(" dpi")
+        }
+
+        return stringBuilder.toString()
     }
 
     override fun onColorChanged(colorCode: Int) {
