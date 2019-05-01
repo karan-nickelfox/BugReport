@@ -12,7 +12,9 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import android.widget.Toast
 import com.example.capturescreen.brush.PropertiesDialogFragment
 import com.example.capturescreen.text.TextEditorDialogFragment
@@ -20,11 +22,14 @@ import com.example.capturescreen.utils.Constants.Companion.FILE_PATH
 import com.example.capturescreen.utils.Constants.Companion.SCREENSHOT_FILE_NAME
 import com.example.capturescreen.utils.Constants.Companion.STORAGE_REQUEST_CODE
 import com.example.capturescreen.utils.saveImage
+import ja.burhanrashid52.photoeditor.OnPhotoEditorListener
 import ja.burhanrashid52.photoeditor.OnSaveBitmap
 import ja.burhanrashid52.photoeditor.PhotoEditor
+import ja.burhanrashid52.photoeditor.ViewType
 import kotlinx.android.synthetic.main.activity_edit.*
 
-class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionListener, TextEditorDialogFragment.InteractionListener {
+class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionListener,
+        TextEditorDialogFragment.InteractionListener, OnPhotoEditorListener {
     private lateinit var bitmap: Bitmap
     private lateinit var photoEditor: PhotoEditor
     private lateinit var propertiesDialogFragment: PropertiesDialogFragment
@@ -35,6 +40,7 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
         init()
 
         photoEditor = PhotoEditor.Builder(this, editView).build()
+        photoEditor.setOnPhotoEditorListener(this)
         propertiesDialogFragment = PropertiesDialogFragment()
 
         setupListeners()
@@ -42,7 +48,7 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
 
     private fun setupListeners() {
         closeBtn.setOnClickListener {
-            editView.source.setImageBitmap(null)
+            onBackPressed()
         }
         undoBtn.setOnClickListener {
             photoEditor.undo()
@@ -63,7 +69,7 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
             }
         }
 
-        sendBtn.setOnClickListener() {
+        sendBtn.setOnClickListener {
             photoEditor.saveAsBitmap(object : OnSaveBitmap {
                 override fun onFailure(e: java.lang.Exception?) {
                     Toast.makeText(this@EditActivity, "Failed sending image", Toast.LENGTH_SHORT).show()
@@ -85,7 +91,9 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
         }
 
         textBtn.setOnClickListener {
-            TextEditorDialogFragment.show(this)
+            TextEditorDialogFragment.show(this).apply {
+                setOnEditListener(this@EditActivity)
+            }
         }
     }
 
@@ -119,7 +127,11 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
         return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             true
         } else {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ) == PackageManager.PERMISSION_GRANTED
+            ) {
                 true
             } else {
                 requestStoragePermission()
@@ -130,9 +142,17 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
 
     private fun requestStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_REQUEST_CODE)
+            ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    STORAGE_REQUEST_CODE
+            )
         } else {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_REQUEST_CODE)
+            ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                    STORAGE_REQUEST_CODE
+            )
         }
     }
 
@@ -166,4 +186,50 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
             editView.source.setImageBitmap(bitmap)
         }
     }
+
+    override fun onEditTextChangeListener(rootView: View?, text: String?, colorCode: Int) {
+        TextEditorDialogFragment.show(this, text!!, colorCode)
+                .setOnEditListener(object : TextEditorDialogFragment.InteractionListener {
+                    override fun onDone(text: String, colorId: Int) {
+                        photoEditor.editText(rootView, text, colorId)
+                    }
+                })
+    }
+
+    override fun onBackPressed() {
+        if (photoEditor.isCacheEmpty) {
+            super.onBackPressed()
+        } else {
+            showSaveDialog()
+        }
+
+    }
+
+    private fun showSaveDialog() {
+        val saveDialog = AlertDialog.Builder(this)
+        saveDialog.setTitle(R.string.save_changes)
+        saveDialog.setMessage(R.string.save_changes_message)
+        saveDialog.setPositiveButton(R.string.yes) { _, _ ->
+            if (hasStoragePermission()) {
+                saveImageToStorage()
+            } else {
+                requestStoragePermission()
+            }
+        }
+        saveDialog.setNegativeButton(R.string.discard) { _, _ ->
+            super.onBackPressed()
+        }
+        saveDialog.setNeutralButton(R.string.cancel, null)
+        saveDialog.show()
+    }
+
+    override fun onStartViewChangeListener(viewType: ViewType?) {}
+
+    override fun onRemoveViewListener(numberOfAddedViews: Int) {}
+
+    override fun onRemoveViewListener(viewType: ViewType?, numberOfAddedViews: Int) {}
+
+    override fun onAddViewListener(viewType: ViewType?, numberOfAddedViews: Int) {}
+
+    override fun onStopViewChangeListener(viewType: ViewType?) {}
 }
