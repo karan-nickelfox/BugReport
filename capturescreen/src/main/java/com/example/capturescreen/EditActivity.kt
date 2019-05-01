@@ -9,6 +9,8 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
@@ -18,7 +20,6 @@ import android.view.View
 import android.widget.Toast
 import com.example.capturescreen.brush.PropertiesDialogFragment
 import com.example.capturescreen.text.TextEditorDialogFragment
-import com.example.capturescreen.utils.Constants.Companion.FILE_PATH
 import com.example.capturescreen.utils.Constants.Companion.SCREENSHOT_FILE_NAME
 import com.example.capturescreen.utils.Constants.Companion.STORAGE_REQUEST_CODE
 import com.example.capturescreen.utils.saveImage
@@ -30,7 +31,7 @@ import kotlinx.android.synthetic.main.activity_edit.*
 
 class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionListener,
         TextEditorDialogFragment.InteractionListener, OnPhotoEditorListener {
-    private lateinit var bitmap: Bitmap
+    private lateinit var image: Bitmap
     private lateinit var photoEditor: PhotoEditor
     private lateinit var propertiesDialogFragment: PropertiesDialogFragment
 
@@ -77,15 +78,16 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
 
                 override fun onBitmapReady(bitmap: Bitmap?) {
                     val fileName = this@EditActivity.saveImage(bitmap!!)
+                    image = bitmap
                     val emailIntent = Intent(Intent.ACTION_SEND)
                     emailIntent.data = Uri.parse("mailto:")
                     emailIntent.type = "image/*"
                     val screenshotUri = this@EditActivity.getFileStreamPath(fileName!!).run {
                         FileProvider.getUriForFile(this@EditActivity, applicationContext.packageName, this)
-
                     }
                     emailIntent.putExtra(Intent.EXTRA_STREAM, screenshotUri)
                     startActivity(emailIntent)
+                    editView.source.setImageBitmap(MediaStore.Images.Media.getBitmap(contentResolver, screenshotUri))
                 }
             })
         }
@@ -111,6 +113,7 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
 
     @SuppressLint("MissingPermission")
     private fun saveImageToStorage() {
+        val FILE_PATH = Environment.getExternalStorageDirectory().absolutePath + "/Pictures/" + System.currentTimeMillis().toString() + ".png"
         photoEditor.saveAsFile(FILE_PATH, object : PhotoEditor.OnSaveListener {
             override fun onSuccess(imagePath: String) {
                 Toast.makeText(this@EditActivity, "Image saved in Pictures !", Toast.LENGTH_SHORT).show()
@@ -173,7 +176,7 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
         val fileName = intent.getStringExtra(SCREENSHOT_FILE_NAME)
         try {
             val inStream = openFileInput(fileName)
-            bitmap = BitmapFactory.decodeStream(inStream)
+            image = BitmapFactory.decodeStream(inStream)
             inStream.close()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -183,10 +186,10 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         val maxHeight = editView.height.toDouble()
-        val resizeRatio = maxHeight / bitmap.height
-        editView.layoutParams.width = (bitmap.width * resizeRatio).toInt()
+        val resizeRatio = maxHeight / image.height
+        editView.layoutParams.width = (image.width * resizeRatio).toInt()
         editView.layoutParams.height = maxHeight.toInt()
-        editView.source.setImageBitmap(bitmap)
+        editView.source.setImageBitmap(image)
     }
 
     override fun onEditTextChangeListener(rootView: View?, text: String?, colorCode: Int) {
