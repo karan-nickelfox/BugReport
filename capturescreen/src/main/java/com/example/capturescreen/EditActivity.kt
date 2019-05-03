@@ -23,15 +23,13 @@ import com.example.capturescreen.text.TextEditorDialogFragment
 import com.example.capturescreen.utils.Constants.Companion.SCREENSHOT_FILE_NAME
 import com.example.capturescreen.utils.Constants.Companion.STORAGE_REQUEST_CODE
 import com.example.capturescreen.utils.saveImage
-import ja.burhanrashid52.photoeditor.OnPhotoEditorListener
-import ja.burhanrashid52.photoeditor.OnSaveBitmap
-import ja.burhanrashid52.photoeditor.PhotoEditor
-import ja.burhanrashid52.photoeditor.ViewType
+import ja.burhanrashid52.photoeditor.*
 import kotlinx.android.synthetic.main.activity_edit.*
 
 class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionListener,
         TextEditorDialogFragment.InteractionListener, OnPhotoEditorListener {
     private lateinit var image: Bitmap
+    private var initialSetup = true
     private lateinit var photoEditor: PhotoEditor
     private lateinit var propertiesDialogFragment: PropertiesDialogFragment
 
@@ -71,14 +69,17 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
         }
 
         sendBtn.setOnClickListener {
-            photoEditor.saveAsBitmap(object : OnSaveBitmap {
+            val saveSettings = SaveSettings.Builder()
+                .setClearViewsEnabled(false)
+                .build()
+
+            photoEditor.saveAsBitmap(saveSettings,object : OnSaveBitmap {
                 override fun onFailure(e: java.lang.Exception?) {
                     Toast.makeText(this@EditActivity, "Failed sending image", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onBitmapReady(bitmap: Bitmap?) {
                     val fileName = this@EditActivity.saveImage(bitmap!!)
-                    image = bitmap
                     val emailIntent = Intent(Intent.ACTION_SEND)
                     emailIntent.data = Uri.parse("mailto:")
                     emailIntent.type = "image/*"
@@ -89,7 +90,6 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
                     emailIntent.putExtra(Intent.EXTRA_TEXT, getSubjectLine())
                     emailIntent.putExtra(Intent.EXTRA_STREAM, screenshotUri)
                     startActivity(emailIntent)
-                    editView.source.setImageBitmap(MediaStore.Images.Media.getBitmap(contentResolver, screenshotUri))
                 }
             })
         }
@@ -210,11 +210,14 @@ class EditActivity : AppCompatActivity(), PropertiesDialogFragment.InteractionLi
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        val maxHeight = editView.height.toDouble()
-        val resizeRatio = maxHeight / image.height
-        editView.layoutParams.width = (image.width * resizeRatio).toInt()
-        editView.layoutParams.height = maxHeight.toInt()
-        editView.source.setImageBitmap(image)
+        if(initialSetup){
+            val maxHeight = editView.height.toDouble()
+            val resizeRatio = maxHeight / image.height
+            editView.layoutParams.width = (image.width * resizeRatio).toInt()
+            editView.layoutParams.height = maxHeight.toInt()
+            editView.source.setImageBitmap(image)
+            initialSetup = false
+        }
     }
 
     override fun onEditTextChangeListener(rootView: View?, text: String?, colorCode: Int) {
